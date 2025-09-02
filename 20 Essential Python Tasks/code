@@ -1,1 +1,239 @@
+df = pd.read_csv("healthcare_dataset.csv")
+df.head(10)
+----------
+print("Shape of dataset:", df.shape)
+print("\nColumns in dataset:\n", df.columns)
+print("\nData types:\n", df.dtypes)
+----------
+cancer_patients = df[df['Medical Condition'] == "Cancer"]
+cancer_patients.head(10)
+----------
+df['Date of Admission'] = pd.to_datetime(df['Date of Admission'], format = '%Y-%m-%d')
+sorted_patients = df.sort_values(by="Date of Admission")
+sorted_patients.head(10)
+----------
+missing_values = df.isnull().sum()
+print(missing_values)
+----------
+df['DR1EXMER'] = df['DR1EXMER'].fillna(36.125)
+df['DRDINT'] = df['DRDINT'].fillna(2.0)
+df['DR1DBIH'] = df['DR1DBIH'].fillna(15.0)
+df['DR1DAY'] = df['DR1DAY'].fillna(6.0)
+df['DR1LANG'] = df['DR1LANG'].fillna(1.0)
+df.head(10)
+----------
+df = df.drop_duplicates()
+df
+----------
+patients_by_diagnosis = df.groupby("Medical Condition").size().reset_index(name="Number of Patients")
+
+patients_by_diagnosis
+----------
+df ["Date of Admission"] = pd.to_datetime(df["Date of Admission"])
+df ["Discharge Date"] = pd.to_datetime(df["Discharge Date"])
+df ["Length of Stay"] = (df ["Discharge Date"] - df ["Date of Admission"]).dt.days
+df[["Name", "Date of Admission", "Discharge Date", "Length of Stay"]].head()
+----------
+df["Date of Admission"] = pd.to_datetime(df["Date of Admission"])
+df ["Admission Year"] = df["Date of Admission"].dt.year
+df ["Admission Month"] = df["Date of Admission"].dt.month
+df.head(10)
+----------
+hospital_counts = df.groupby("Hospital").size().reset_index(name="Number_of_Patients") 
+top_5_hospitals = hospital_counts.nlargest(5, "Number_of_Patients")
+print(top_5_hospitals)
+----------
+df["Date of Admission"] = pd.to_datetime(df["Date of Admission"])
+df["Month"] = df["Date of Admission"].dt.to_period("M")
+# Map conditions to departments (since I had no department col, so I mapped my Medical Conditions to a relevant department)
+condition_to_dept = {
+    "Cancer": "Oncology",
+    "Heart Disease": "Cardiology",
+    "Flu": "General Medicine",
+    "Diabetes": "Endocrinology",
+    "Asthma": "Pulmonology",
+    "Fracture": "Orthopedics",
+}
+# mapped the Medical Conditions to Departments
+df["Department"] = df["Medical Condition"].map(condition_to_dept)
+
+pivot = pd.pivot_table(
+    df,
+    index="Department",
+    columns="Month",
+    values="Name",
+    aggfunc="count",
+    fill_value=0
+)
+print(pivot)
+----------
+df["Date of Admission"] = pd.to_datetime(df["Date of Admission"])
+df["Discharge Date"] = pd.to_datetime(df["Discharge Date"])
+df["Length_of_Stay"] = (df["Discharge Date"] - df["Date of Admission"]).dt.days
+
+corr_matrix = df[["Age", "Length_of_Stay", "Billing Amount"]].corr()
+print(corr_matrix)
+----------
+diagnosis_counts = df["Medical Condition"].value_counts().head(10)
+
+diagnosis_counts.plot(kind="bar", figsize=(7,4), color ="green")
+
+plt.title("Top Diagnoses by Patient Count")
+plt.xlabel("Medical Condition")
+plt.ylabel("Number of Patients")
+plt.xticks(rotation=0, ha="center")
+plt.show()
+----------
+df["Date of Admission"] = pd.to_datetime(df["Date of Admission"])
+df_2024 = df[df["Date of Admission"].dt.year == 2024]
+
+# grouping by month
+monthly_trend = df_2024.groupby(df_2024["Date of Admission"].dt.month).size()
+
+plt.figure(figsize=(8,5))
+plt.plot(monthly_trend.index, monthly_trend.values, marker="o")
+plt.title("Monthly Patient Admissions Trend (2024)")
+plt.xlabel("Month")
+plt.ylabel("Number of Patients")
+plt.xticks(range(1,13))  # months 1–12
+plt.grid(True)
+plt.show()
+----------
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+plt.figure(figsize=(5,5))
+counts, bins, patches = plt.hist(df['Age'], bins=6, color='skyblue', edgecolor='black')
+
+plt.title("Patient Age Distribution", fontsize=15)
+plt.xlabel("Age Groups")
+plt.ylabel("Number of Patients")
+
+for count, bin_start in zip(counts, bins):
+    plt.text(bin_start + (bins[1]-bins[0])/2, count, str(int(count)), ha='center', va='bottom')
+plt.show()
+----------
+# Created my own dataframe
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data = {
+    'Condition': ['Cancer', 'Heart Disease', 'Flu', 'Diabetes', 'Asthma', 'Fracture', 'Cancer'],
+    'Billing': [18856.28, 12000.00, 5000.00, 8000.50, 6000.75, 7000.25, 20000.00]
+}
+
+df = pd.DataFrame(data)
+
+# Mapping conditions to departments
+condition_to_dept = {
+    "Cancer": "Oncology",
+    "Heart Disease": "Cardiology",
+    "Flu": "General Medicine",
+    "Diabetes": "Endocrinology",
+    "Asthma": "Pulmonology",
+    "Fracture": "Orthopedics"
+}
+
+# Created Department column
+df['Department'] = df['Condition'].map(condition_to_dept)
+
+print(df)
+
+plt.figure(figsize=(20,10))
+
+df.boxplot(column='Billing', by='Department', grid=False, patch_artist=True,
+           boxprops=dict(facecolor='green', color='black'),
+           medianprops=dict(color='red'))
+
+plt.title("Hospital Charges by Department")
+plt.suptitle("")  # remove default title
+plt.xlabel("Department")
+plt.xticks(rotation=45, ha='right')
+plt.ylabel("Charges (PKR)")
+plt.tight_layout()
+plt.show()
+----------
+import matplotlib.pyplot as plt
+
+# Count the number of patients in each gender
+gender_counts = df['Gender'].value_counts()
+
+# Plot the pie chart
+plt.figure(figsize=(6,6))
+plt.pie(
+    gender_counts,              # Frequency of each gender
+    labels=gender_counts.index, # Labels: Male/Female/Other
+    autopct='%1.1f%%',          # Show percentage on each slice
+    startangle=90,              # Rotate chart so first slice starts at 90 degrees
+    colors=['yellow', 'lightpink'], # Optional slice colors
+)
+
+plt.title("Patients by Gender")
+plt.show()
+---------
+# Ensure the date column is datetime
+df['Date of Admission'] = pd.to_datetime(df['Date of Admission'])
+
+# Extract year-month
+df['YearMonth'] = df['Date of Admission'].dt.to_period('M')
+
+# Count patients per month
+monthly_admissions = df.groupby('YearMonth').size()
+print(monthly_admissions)
+
+plt.figure(figsize=(12,6))
+plt.plot(monthly_admissions.index.astype(str), monthly_admissions.values,marker=".", color='purple')
+
+plt.title("Monthly Patient Admissions")
+plt.xlabel("Month")
+plt.ylabel("Number of Patients")
+plt.xticks(rotation=45)  # Rotate x-axis labels for readability
+plt.grid(True)
+plt.tight_layout()       # Adjust layout so labels fit
+
+plt.show()
+---------
+import pandas as pd
+import numpy as np
+
+# Sample data
+data = {
+    'Age': np.random.randint(20, 80, 100),               # Ages between 20 and 80
+    'Length_of_Stay': np.random.randint(1, 15, 100),    # Stay between 1 and 15 days
+    'Billing': np.random.randint(5000, 50000, 100)      # Charges between 5000 and 50000
+}
+
+df = pd.DataFrame(data)
+print(df.head())
+
+# Compute correlation matrix
+numeric_cols = ['Age', 'Length_of_Stay', 'Billing']
+corr_matrix = df[numeric_cols].corr()
+print(corr_matrix)
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(6,5))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title("Correlation Heatmap: Age, Length of Stay, Billing")
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
